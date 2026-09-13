@@ -1,0 +1,129 @@
+student_id,cohort,assessment,question,co,max_marks,marks_obtained
+S001,Section A,Internal 1,Q1,CO1,10,8
+S002,Section A,Internal 1,Q1,CO1,10,7
+S003,Section A,Internal 1,Q1,CO1,10,6
+S004,Section A,Internal 1,Q1,CO1,10,9
+S005,Section A,Internal 1,Q1,CO1,10,5
+S006,Section A,Internal 1,Q1,CO1,10,8
+S007,Section A,Internal 1,Q1,CO1,10,7
+S008,Section A,Internal 1,Q1,CO1,10,6
+S009,Section B,Internal 1,Q1,CO1,10,4
+S010,Section B,Internal 1,Q1,CO1,10,8
+S011,Section B,Internal 1,Q1,CO1,10,9
+S012,Section B,Internal 1,Q1,CO1,10,6
+S013,Section B,Internal 1,Q1,CO1,10,7
+S014,Section B,Internal 1,Q1,CO1,10,8
+S015,Section B,Internal 1,Q1,CO1,10,5
+S016,Section B,Internal 1,Q1,CO1,10,7
+S001,Section A,Internal 1,Q2,CO2,10,5
+S002,Section A,Internal 1,Q2,CO2,10,6
+S003,Section A,Internal 1,Q2,CO2,10,4
+S004,Section A,Internal 1,Q2,CO2,10,7
+S005,Section A,Internal 1,Q2,CO2,10,3
+S006,Section A,Internal 1,Q2,CO2,10,6
+S007,Section A,Internal 1,Q2,CO2,10,5
+S008,Section A,Internal 1,Q2,CO2,10,4
+S009,Section B,Internal 1,Q2,CO2,10,3
+S010,Section B,Internal 1,Q2,CO2,10,7
+S011,Section B,Internal 1,Q2,CO2,10,6
+S012,Section B,Internal 1,Q2,CO2,10,4
+S013,Section B,Internal 1,Q2,CO2,10,5
+S014,Section B,Internal 1,Q2,CO2,10,6
+S015,Section B,Internal 1,Q2,CO2,10,4
+S016,Section B,Internal 1,Q2,CO2,10,5
+S001,Section A,Internal 2,Q1,CO3,10,9
+S002,Section A,Internal 2,Q1,CO3,10,8
+S003,Section A,Internal 2,Q1,CO3,10,7
+S004,Section A,Internal 2,Q1,CO3,10,8
+S005,Section A,Internal 2,Q1,CO3,10,6
+S006,Section A,Internal 2,Q1,CO3,10,8
+S007,Section A,Internal 2,Q1,CO3,10,7
+S008,Section A,Internal 2,Q1,CO3,10,6
+S009,Section B,Internal 2,Q1,CO3,10,5
+S010,Section B,Internal 2,Q1,CO3,10,7
+S011,Section B,Internal 2,Q1,CO3,10,8
+S012,Section B,Internal 2,Q1,CO3,10,7
+S013,Section B,Internal 2,Q1,CO3,10,6
+S014,Section B,Internal 2,Q1,CO3,10,8
+S015,Section B,Internal 2,Q1,CO3,10,6
+S016,Section B,Internal 2,Q1,CO3,10,7
+S001,Section A,Internal 2,Q2,CO4,10,6
+S002,Section A,Internal 2,Q2,CO4,10,5
+S003,Section A,Internal 2,Q2,CO4,10,7
+S004,Section A,Internal 2,Q2,CO4,10,6
+S005,Section A,Internal 2,Q2,CO4,10,4
+S006,Section A,Internal 2,Q2,CO4,10,6
+S007,Section A,Internal 2,Q2,CO4,10,5
+S008,Section A,Internal 2,Q2,CO4,10,5
+S009,Section B,Internal 2,Q2,CO4,10,3
+S010,Section B,Internal 2,Q2,CO4,10,6
+S011,Section B,Internal 2,Q2,CO4,10,7
+S012,Section B,Internal 2,Q2,CO4,10,4
+S013,Section B,Internal 2,Q2,CO4,10,5
+S014,Section B,Internal 2,Q2,CO4,10,6
+S015,Section B,Internal 2,Q2,CO4,10,4
+S016,Section B,Internal 2,Q2,CO4,10,5
+S001,Section A,External,Q1,CO1,15,12
+S002,Section A,External,Q1,CO1,15,11
+S003,Section A,External,Q1,CO1,15,9
+S004,Section A,External,Q1,CO1,15,13
+S005,Section A,External,Q1,CO1,15,8
+S006,Section A,External,Q1,CO1,15,12
+S007,Section A,External,Q1,CO1,15,10
+S008,Section A,External,Q1,CO1,15,9
+S009,Section B,External,Q1,CO1,15,7
+S010,Section B,External,Q1,CO1,15,12
+S011,Section B,External,Q1,CO1,15,14
+S012,Section B,External,Q1,CO1,15,9
+S013,Section B,External,Q1,CO1,15,11
+S014,Section B,External,Q1,CO1,15,12
+S015,Section B,External,Q1,CO1,15,8
+S016,Section B,External,Q1,CO1,15,10
+S001,Section A,External,Q2,CO2,15,9
+S002,Section A,External,Q2,CO2,15,8
+S003,Section A,External,Q2,CO2,15,6
+S004,Section A,External,Q2,CO2,15,10
+S005,Section A,External,Q2,CO2,15,5
+S006,Section A,External,Q2,CO2,15,9
+S007,Section A,External,Q2,CO2,15,7
+S008,Section A,External,Q2,CO2,15,6
+S009,Section B,External,Q2,CO2,15,4
+S010,Section B,External,Q2,CO2,15,9
+S011,Section B,External,Q2,CO2,15,10
+S012,Section B,External,Q2,CO2,15,6
+S013,Section B,External,Q2,CO2,15,7
+S014,Section B,External,Q2,CO2,15,8
+S015,Section B,External,Q2,CO2,15,5
+S016,Section B,External,Q2,CO2,15,7
+S001,Section A,External,Q3,CO3,15,13
+S002,Section A,External,Q3,CO3,15,12
+S003,Section A,External,Q3,CO3,15,10
+S004,Section A,External,Q3,CO3,15,12
+S005,Section A,External,Q3,CO3,15,9
+S006,Section A,External,Q3,CO3,15,11
+S007,Section A,External,Q3,CO3,15,10
+S008,Section A,External,Q3,CO3,15,9
+S009,Section B,External,Q3,CO3,15,8
+S010,Section B,External,Q3,CO3,15,10
+S011,Section B,External,Q3,CO3,15,12
+S012,Section B,External,Q3,CO3,15,10
+S013,Section B,External,Q3,CO3,15,9
+S014,Section B,External,Q3,CO3,15,12
+S015,Section B,External,Q3,CO3,15,8
+S016,Section B,External,Q3,CO3,15,10
+S001,Section A,External,Q4,CO4,15,8
+S002,Section A,External,Q4,CO4,15,7
+S003,Section A,External,Q4,CO4,15,9
+S004,Section A,External,Q4,CO4,15,8
+S005,Section A,External,Q4,CO4,15,6
+S006,Section A,External,Q4,CO4,15,8
+S007,Section A,External,Q4,CO4,15,7
+S008,Section A,External,Q4,CO4,15,6
+S009,Section B,External,Q4,CO4,15,5
+S010,Section B,External,Q4,CO4,15,8
+S011,Section B,External,Q4,CO4,15,9
+S012,Section B,External,Q4,CO4,15,6
+S013,Section B,External,Q4,CO4,15,7
+S014,Section B,External,Q4,CO4,15,8
+S015,Section B,External,Q4,CO4,15,5
+S016,Section B,External,Q4,CO4,15,7
