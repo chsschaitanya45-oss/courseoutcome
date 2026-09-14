@@ -6,6 +6,8 @@ from unittest.mock import MagicMock
 
 import pandas as pd
 
+from database import list_uploaded_datasets, save_uploaded_dataset
+
 MODULE_PATH = Path(__file__).resolve().parents[1] / "streamlit_app.py"
 
 spec = importlib.util.spec_from_file_location("streamlit_app_under_test", MODULE_PATH)
@@ -94,6 +96,13 @@ class GeminiAiReportTests(unittest.TestCase):
         self.assertIn("actual attainment", prompt.lower())
         self.assertIn("why the gap exists", prompt.lower())
         self.assertIn("what action should be taken", prompt.lower())
+
+    def test_uploaded_dataset_is_saved_to_database(self):
+        df = pd.DataFrame({"co": ["CO1"], "co_statement": ["Intro to data"]})
+        save_uploaded_dataset("courses", "courses.csv", df)
+        saved = list_uploaded_datasets(limit=5)
+        self.assertTrue((saved["dataset_key"] == "courses").any())
+        self.assertTrue((saved["file_name"] == "courses.csv").any())
 
     def test_role_based_auth_allows_only_allowed_roles(self):
         os.environ["AUTH_FACULTY_USERNAME"] = "faculty"

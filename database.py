@@ -39,12 +39,80 @@ def init_db() -> None:
                 diagnostics_json TEXT NOT NULL,
                 llm_report TEXT NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS uploaded_data (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                created_at TEXT NOT NULL,
+                dataset_key TEXT NOT NULL,
+                file_name TEXT NOT NULL,
+                row_count INTEGER NOT NULL,
+                columns_json TEXT NOT NULL,
+                data_json TEXT NOT NULL
+            );
             """
         )
 
 
 def _records(df: pd.DataFrame) -> str:
     return df.to_json(orient="records")
+
+
+def save_uploaded_dataset(dataset_key: str, file_name: str, df: pd.DataFrame) -> int:
+    init_db()
+    if df is None:
+        raise ValueError("Dataset cannot be None.")
+    with connect() as connection:
+        connection.execute("DELETE FROM uploaded_data WHERE dataset_key = ?", (str(dataset_key),))
+        cursor = connection.execute(
+            """
+            INSERT INTO uploaded_data (
+                created_at,
+                dataset_key,
+                file_name,
+                row_count,
+                columns_json,
+                data_json
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                str(dataset_key),
+                str(file_name),
+                int(len(df)),
+                json.dumps(list(df.columns)),
+                _records(df),
+            ),
+        )
+        return int(cursor.lastrowid)
+
+
+def list_uploaded_datasets(limit: int = 10) -> pd.DataFrame:
+    init_db()
+    with connect() as connection:
+        return pd.read_sql_query(
+            """
+            SELECT id, created_at, dataset_key, file_name, row_count
+            FROM uploaded_data
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            connection,
+            params=(limit,),
+        )
+
+
+def get_uploaded_dataset(dataset_id: int) -> dict[str, Any] | None:
+    init_db()
+    with connect() as connection:
+        connection.row_factory = sqlite3.Row
+        row = connection.execute("SELECT * FROM uploaded_data WHERE id = ?", (dataset_id,)).fetchone()
+    if row is None:
+        return None
+    data = dict(row)
+    data["columns"] = json.loads(data["columns_json"])
+    data["data"] = pd.read_json(data["data_json"], orient="records")
+    return data
 
 
 def save_run(

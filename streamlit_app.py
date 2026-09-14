@@ -20,7 +20,7 @@ from attainment import (
     report_context,
     validate_required_columns,
 )
-from database import DB_PATH, delete_run, get_run, init_db, list_runs, save_run
+from database import DB_PATH, delete_run, get_run, init_db, list_runs, save_run, save_uploaded_dataset
 
 
 REQUIRED_COLUMNS = {
@@ -607,6 +607,7 @@ def main() -> None:
                 loaded = load_csv_or_excel(uploaded)
                 if loaded is not None:
                     st.session_state[key] = loaded
+                    save_uploaded_dataset(key, uploaded.name, loaded)
                     st.toast(f"{uploaded.name} uploaded", icon=":material/check:")
 
             preview_cols = st.columns(4)
