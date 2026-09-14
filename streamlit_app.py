@@ -318,6 +318,43 @@ Data:
     return str(response)
 
 
+def generate_dashboard_summary(context: str, audience: str, model: str) -> str:
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY is not available in .env.local.")
+
+    prompt = f"""
+You are an academic dashboard analyst for engineering accreditation.
+
+Generate a concise but insightful Dashboard Analysis for {audience} using only the provided attainment data.
+
+Requirements:
+- Summarize the overall attainment status in plain academic language.
+- Highlight COs below target, average attainment trends, and any evidence gaps.
+- Explain whether the course is on track, needs attention, or requires intervention.
+- Suggest the most likely action areas and whether the HOD review is required.
+- Keep it brief, formal, and suitable for accreditation dashboard review.
+- Use markdown headings and bullet points.
+- Do not include raw JSON or code blocks.
+
+Data:
+{context}
+"""
+    client = genai.Client(api_key=api_key)
+    response = client.models.generate_content(model=model, contents=prompt)
+    if hasattr(response, "text") and response.text:
+        return response.text
+    if hasattr(response, "candidates"):
+        text_parts = []
+        for candidate in response.candidates:
+            for part in getattr(candidate, "content", []).parts:
+                if hasattr(part, "text"):
+                    text_parts.append(part.text)
+        if text_parts:
+            return "".join(text_parts)
+    return str(response)
+
+
 def friendly_llm_error(exc: Exception) -> str:
     message = str(exc).lower()
     if "api key" in message or "authentication" in message or "forbidden" in message:
@@ -668,6 +705,15 @@ def main() -> None:
     course_code, course_name = get_active_course(st.session_state.courses, selected_course_code)
 
     with dashboard_tab:
+        dashboard_context = report_context(co_attainment, outcome_attainment, gap_analysis)
+        try:
+            dashboard_summary = generate_dashboard_summary(dashboard_context, st.session_state.authenticated_role or "Faculty", model_name)
+            with st.container(border=True):
+                st.subheader("AI dashboard summary", icon=":material/auto_awesome:")
+                st.markdown(dashboard_summary)
+        except Exception as exc:
+            st.warning(friendly_llm_error(exc), icon=":material/error:")
+
         with st.container(horizontal=True):
             st.metric("Average CO level", f"{avg_co:.2f}", border=True)
             st.metric("Average PO/PSO level", f"{avg_outcome:.2f}", border=True)

@@ -49,6 +49,26 @@ class GeminiAiReportTests(unittest.TestCase):
 
         fake_client.models.generate_content.assert_not_called()
 
+    def test_generate_dashboard_summary_uses_llm(self):
+        os.environ["GEMINI_API_KEY"] = "test-key"
+
+        fake_client = MagicMock()
+        fake_response = MagicMock()
+        fake_response.text = "Dashboard insight"
+        fake_client.models.generate_content.return_value = fake_response
+        module.genai = MagicMock()
+        module.genai.Client.return_value = fake_client
+
+        result = module.generate_dashboard_summary("context", "Faculty", "gemini-3.6-flash")
+
+        self.assertEqual(result, "Dashboard insight")
+        module.genai.Client.assert_called_once_with(api_key="test-key")
+        fake_client.models.generate_content.assert_called_once()
+        call_kwargs = fake_client.models.generate_content.call_args.kwargs
+        self.assertEqual(call_kwargs["model"], "gemini-3.6-flash")
+        self.assertIn("Dashboard Analysis", call_kwargs["contents"])
+        self.assertIn("context", call_kwargs["contents"])
+
     def test_gap_analysis_report_has_required_metadata_and_gap_logic(self):
         os.environ["GEMINI_API_KEY"] = "test-key"
 
