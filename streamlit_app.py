@@ -199,6 +199,18 @@ def ai_report(context: str, audience: str, report_type: str, model: str) -> str:
     if not api_key:
         raise RuntimeError("GEMINI_API_KEY is not available in .env.local.")
 
+    supported_model_names = {
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
+        "gemini-2.5-pro",
+        "gemini-3.6-flash",
+    }
+    normalized_model = (model or "").strip()
+    if normalized_model and normalized_model not in supported_model_names:
+        raise RuntimeError(
+            "Unsupported or retired Gemini model name. Use a supported model such as gemini-3.6-flash or gemini-2.5-flash."
+        )
+
     report_type_clean = (report_type or "Action taken report").strip()
     report_type_lower = report_type_clean.lower()
 
@@ -502,7 +514,7 @@ def main() -> None:
         level_1_min_percent = st.slider("Level 1 minimum", 0, 100, 50, 5)
         level_2_min_percent = st.slider("Level 2 minimum", 0, 100, 60, 5)
         level_3_min_percent = st.slider("Level 3 minimum", 0, 100, 70, 5)
-        model_name = st.text_input("Gemini model", value=os.getenv("GEMINI_MODEL", "gemini-2.0-flash"))
+        model_name = st.text_input("Gemini model", value=os.getenv("GEMINI_MODEL", "gemini-3.6-flash"))
         st.caption(f"Database: {DB_PATH}")
 
     config = AttainmentConfig(

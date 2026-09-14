@@ -24,15 +24,30 @@ class GeminiAiReportTests(unittest.TestCase):
         module.genai = MagicMock()
         module.genai.Client.return_value = fake_client
 
-        result = module.ai_report("context", "faculty", "summary", "gemini-2.0-flash")
+        result = module.ai_report("context", "faculty", "summary", "gemini-3.6-flash")
 
         self.assertEqual(result, "Gemini report")
         module.genai.Client.assert_called_once_with(api_key="test-key")
         fake_client.models.generate_content.assert_called_once()
         call_kwargs = fake_client.models.generate_content.call_args.kwargs
-        self.assertEqual(call_kwargs["model"], "gemini-2.0-flash")
+        self.assertEqual(call_kwargs["model"], "gemini-3.6-flash")
         self.assertIn("context", call_kwargs["contents"])
         self.assertIn("faculty", call_kwargs["contents"])
+
+    def test_ai_report_rejects_retired_model_name(self):
+        os.environ["GEMINI_API_KEY"] = "test-key"
+
+        fake_client = MagicMock()
+        fake_response = MagicMock()
+        fake_response.text = "Should not be used"
+        fake_client.models.generate_content.return_value = fake_response
+        module.genai = MagicMock()
+        module.genai.Client.return_value = fake_client
+
+        with self.assertRaisesRegex(RuntimeError, r"retired|unsupported|gemini-3\.6-flash"):
+            module.ai_report("context", "faculty", "summary", "gemini-2.0-flash")
+
+        fake_client.models.generate_content.assert_not_called()
 
     def test_gap_analysis_report_has_required_metadata_and_gap_logic(self):
         os.environ["GEMINI_API_KEY"] = "test-key"
@@ -44,7 +59,7 @@ class GeminiAiReportTests(unittest.TestCase):
         module.genai = MagicMock()
         module.genai.Client.return_value = fake_client
 
-        module.ai_report("context", "faculty", "Gap analysis report", "gemini-2.0-flash")
+        module.ai_report("context", "faculty", "Gap analysis report", "gemini-3.6-flash")
 
         prompt = fake_client.models.generate_content.call_args.kwargs["contents"]
         self.assertIn("Course Code", prompt)
