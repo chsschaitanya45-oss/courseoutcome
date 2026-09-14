@@ -145,10 +145,8 @@ def init_state() -> None:
             st.session_state[key] = None
     if "generated_report" not in st.session_state:
         st.session_state.generated_report = ""
-    if "authenticated_user" not in st.session_state:
-        st.session_state.authenticated_user = ""
-    if "authenticated_role" not in st.session_state:
-        st.session_state.authenticated_role = ""
+    st.session_state.authenticated_user = "Public user"
+    st.session_state.authenticated_role = "Faculty"
 
 
 def load_csv_or_excel(uploaded_file) -> pd.DataFrame | None:
@@ -529,19 +527,13 @@ def main() -> None:
     load_dotenv(".env.local")
     init_db()
     init_state()
-    require_authentication()
 
     st.title("Course outcome agent", icon=":material/analytics:")
-    st.caption(f"Signed in as: {st.session_state.authenticated_role} ({st.session_state.authenticated_user})")
     st.caption(
         "Upload institutional academic data, calculate attainment, generate LLM analysis, and store the report in the database."
     )
 
     with st.sidebar:
-        st.write(f"Role: {st.session_state.authenticated_role}")
-        if st.button("Logout", type="secondary"):
-            logout_current_user()
-
         st.header("Rubric settings", icon=":material/tune:")
         mark_threshold_percent = st.slider("Marks threshold", 0, 100, 60, 5)
         direct_weight = st.number_input("Direct weight", min_value=0.0, max_value=100.0, value=80.0, step=5.0)
@@ -651,7 +643,7 @@ def main() -> None:
             if runs.empty:
                 st.caption("No generated reports have been stored yet.")
             else:
-                st.write("All authenticated users can open and delete saved reports.")
+                st.write("All users can open and delete saved reports.")
                 for _, row in runs.iterrows():
                     cols = st.columns([2, 2, 2, 2, 1, 1])
                     cols[0].write(row["course_code"] if "course_code" in row and row["course_code"] is not None else "-")
@@ -841,7 +833,7 @@ def main() -> None:
         if runs.empty:
             st.caption("No saved reports have been created yet.")
         else:
-            st.write("All authenticated users can open and delete saved reports.")
+            st.write("All users can open and delete saved reports.")
             for _, row in runs.iterrows():
                 cols = st.columns([2, 2, 2, 2, 1, 1])
                 cols[0].write(row["course_code"] if "course_code" in row and row["course_code"] is not None else "-")
