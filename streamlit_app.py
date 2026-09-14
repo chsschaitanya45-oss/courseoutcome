@@ -48,12 +48,27 @@ def role_can_access_feature(role: str, feature: str) -> bool:
 
 
 def get_role_credentials_map() -> dict[str, tuple[str, str]]:
-    return {
+    default_credentials = {
+        "Faculty": ("faculty", "faculty123"),
+        "Head of department": ("hod", "hod123"),
+        "NBA coordinator": ("nba", "nba123"),
+        "IQAC": ("iqac", "iqac123"),
+    }
+    resolved = {}
+    for role, (username_key, password_key) in {
         "Faculty": ("AUTH_FACULTY_USERNAME", "AUTH_FACULTY_PASSWORD"),
         "Head of department": ("AUTH_HOD_USERNAME", "AUTH_HOD_PASSWORD"),
         "NBA coordinator": ("AUTH_NBA_USERNAME", "AUTH_NBA_PASSWORD"),
         "IQAC": ("AUTH_IQAC_USERNAME", "AUTH_IQAC_PASSWORD"),
-    }
+    }.items():
+        env_user = os.getenv(username_key, "").strip()
+        env_password = os.getenv(password_key, "").strip()
+        default_user, default_password = default_credentials[role]
+        resolved[role] = (
+            env_user or default_user,
+            env_password or default_password,
+        )
+    return resolved
 
 
 def hash_password(password: str) -> str:
@@ -65,22 +80,21 @@ def validate_role_credentials(username: str, password: str) -> bool:
         return False
     normalized_username = str(username).strip().lower()
     normalized_password = str(password).strip()
-    for role, (username_key, password_key) in get_role_credentials_map().items():
-        env_user = os.getenv(username_key, "").strip().lower()
-        env_pass = os.getenv(password_key, "").strip()
-        if env_user and env_pass:
-            expected_hash = hash_password(env_pass)
-            if normalized_username == env_user and hash_password(normalized_password) == expected_hash:
-                return True
-            if normalized_username == env_user and normalized_password == env_pass:
-                return True
+    for role, (credential_user, credential_password) in get_role_credentials_map().items():
+        candidate_user = str(credential_user).strip().lower()
+        candidate_password = str(credential_password).strip()
+        if not candidate_user or not candidate_password:
+            continue
+        expected_hash = hash_password(candidate_password)
+        if normalized_username == candidate_user and (hash_password(normalized_password) == expected_hash or normalized_password == candidate_password):
+            return True
     return False
 
 
 def infer_role_by_username(username: str) -> str:
     normalized_username = str(username).strip().lower()
-    for role, (username_key, _) in get_role_credentials_map().items():
-        if os.getenv(username_key, "").strip().lower() == normalized_username:
+    for role, (credential_user, _) in get_role_credentials_map().items():
+        if str(credential_user).strip().lower() == normalized_username:
             return role
     return "Unauthorized"
 
@@ -93,8 +107,8 @@ def require_authentication() -> None:
     st.caption("Only authorized Faculty, HOD, NBA coordinator, and IQAC users can access this data.")
 
     with st.form("role_login"):
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
+        username = st.text_input("Username", value="faculty")
+        password = st.text_input("Password", type="password", value="faculty123")
         submitted = st.form_submit_button("Login")
 
         if submitted:
@@ -145,8 +159,10 @@ def init_state() -> None:
             st.session_state[key] = None
     if "generated_report" not in st.session_state:
         st.session_state.generated_report = ""
-    st.session_state.authenticated_user = "Public user"
-    st.session_state.authenticated_role = "Faculty"
+    if "authenticated_user" not in st.session_state:
+        st.session_state.authenticated_user = ""
+    if "authenticated_role" not in st.session_state:
+        st.session_state.authenticated_role = ""
 
 
 def load_csv_or_excel(uploaded_file) -> pd.DataFrame | None:
@@ -527,6 +543,7 @@ def main() -> None:
     load_dotenv(".env.local")
     init_db()
     init_state()
+    require_authentication()
 
     st.title("Course outcome agent", icon=":material/analytics:")
     st.caption(

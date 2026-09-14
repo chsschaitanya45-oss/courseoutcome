@@ -122,6 +122,31 @@ class GeminiAiReportTests(unittest.TestCase):
         self.assertFalse(module.validate_role_credentials("faculty", "wrongpass"))
         self.assertEqual(module.get_allowed_roles(), ["Faculty", "Head of department", "NBA coordinator", "IQAC"])
 
+    def test_main_requires_authentication_before_rendering(self):
+        original_st = module.st
+        original_require_auth = module.require_authentication
+        original_load_dotenv = module.load_dotenv
+        original_init_db = module.init_db
+        original_init_state = module.init_state
+
+        module.st = MagicMock()
+        module.st.session_state = {}
+        module.require_authentication = MagicMock(side_effect=RuntimeError("auth stop"))
+        module.load_dotenv = MagicMock()
+        module.init_db = MagicMock()
+        module.init_state = MagicMock()
+
+        try:
+            with self.assertRaisesRegex(RuntimeError, "auth stop"):
+                module.main()
+            module.require_authentication.assert_called_once()
+        finally:
+            module.st = original_st
+            module.require_authentication = original_require_auth
+            module.load_dotenv = original_load_dotenv
+            module.init_db = original_init_db
+            module.init_state = original_init_state
+
     def test_role_permissions_are_role_specific(self):
         self.assertTrue(module.role_can_access_feature("Faculty", "data_upload"))
         self.assertTrue(module.role_can_access_feature("Head of department", "report_generation"))
