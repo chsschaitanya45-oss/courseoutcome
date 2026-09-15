@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -8,8 +9,124 @@ from typing import Any
 
 import pandas as pd
 
+try:
+    import gspread
+    from google.oauth2.service_account import Credentials
+except Exception:  # pragma: no cover - optional integration dependency
+    gspread = None
+    Credentials = None
+
 
 DB_PATH = Path("data/course_outcome_agent.db")
+GOOGLE_SHEET_ID = os.getenv("GOOGLE_SHEET_ID", "").strip()
+
+
+def get_google_sheet_client():
+    if gspread is None or Credentials is None:
+        return None
+    sheet_id = os.getenv("GOOGLE_SHEET_ID", "").strip()
+    service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON", "").strip()
+    service_account_file = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE", "").strip()
+    if not sheet_id:
+        return None
+    if service_account_json:
+        try:
+            import json as _json
+
+            creds = Credentials.from_service_account_info(
+                _json.loads(service_account_json),
+                scopes=[
+                    "https://www.googleapis.com/auth/spreadsheets",
+                    "https://www.googleapis.com/auth/drive",
+                ],
+            )
+            return gspread.authorize(creds)
+        except Exception:
+            return None
+    if service_account_file and Path(service_account_file).exists():
+        try:
+            creds = Credentials.from_service_account_file(
+                service_account_file,
+                scopes=[
+                    "https://www.googleapis.com/auth/spreadsheets",
+                    "https://www.googleapis.com/auth/drive",
+                ],
+            )
+            return gspread.authorize(creds)
+        except Exception:
+            return None
+    return None
+
+
+def ensure_google_sheet(sheet_name: str, headers: list[str] | None = None) -> Any | None:
+    client = get_google_sheet_client()
+    if client is None:
+        return None
+    sheet_id = os.getenv("GOOGLE_SHEET_ID", "").strip()
+    if not sheet_id:
+        return None
+    try:
+        workbook = client.open_by_key(sheet_id)
+        existing = [ws.title for ws in workbook.worksheets()]
+        if sheet_name in existing:
+            worksheet = workbook.worksheet(sheet_name)
+        else:
+            worksheet = workbook.add_worksheet(title=sheet_name, rows=1000, cols=20)
+        if headers and not worksheet.get_all_values():
+            worksheet.append_row(headers, value_input_option="RAW")
+        return worksheet
+    except Exception:
+        return None
+
+
+def get_google_sheet_rows(sheet_name: str) -> list[list[str]]:
+    client = get_google_sheet_client()
+    if client is None:
+        return []
+    sheet_id = os.getenv("GOOGLE_SHEET_ID", "").strip()
+    if not sheet_id:
+        return []
+    try:
+        workbook = client.open_by_key(sheet_id)
+        worksheet = workbook.worksheet(sheet_name)
+        return worksheet.get_all_values()
+    except Exception:
+        return []
+
+
+def append_google_sheet_rows(sheet_name: str, rows: list[list[Any]]) -> bool:
+    if not rows:
+        return False
+    worksheet = ensure_google_sheet(sheet_name)
+    if worksheet is None:
+        return False
+    try:
+        worksheet.append_rows(rows, value_input_option="RAW")
+        return True
+    except Exception:
+        return False
+
+
+def sync_google_user_login(username: str, role: str) -> bool:
+    if not username or not role:
+        return False
+    timestamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    row = [timestamp, str(username).strip(), str(role).strip(), "login"]
+    return append_google_sheet_rows("Users", [row])
+
+
+def sync_google_uploaded_dataset(dataset_key: str, file_name: str, df: pd.DataFrame) -> bool:
+    if df is None:
+        return False
+    timestamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    row = [timestamp, str(dataset_key), str(file_name), int(len(df)), json.dumps(list(df.columns))]
+    return append_google_sheet_rows("UploadedData", [row])
+
+
+def sync_google_run(run_id: int, course_code: str, course_name: str, report_type: str, audience: str, llm_report: str) -> bool:
+    timestamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    row = [timestamp, int(run_id), str(course_code), str(course_name), str(report_type), str(audience), llm_report[:2000]]
+    return append_google_sheet_rows("Reports", [row])
 
 
 def connect() -> sqlite3.Connection:
@@ -84,7 +201,8 @@ def save_uploaded_dataset(dataset_key: str, file_name: str, df: pd.DataFrame) ->
                 _records(df),
             ),
         )
-        return int(cursor.lastrowid)
+    sync_google_uploaded_dataset(dataset_key, file_name, df)
+    return int(cursor.lastrowid)
 
 
 def list_uploaded_datasets(limit: int = 10) -> pd.DataFrame:
@@ -167,7 +285,9 @@ def save_run(
                 llm_report,
             ),
         )
-        return int(cursor.lastrowid)
+        run_id = int(cursor.lastrowid)
+    sync_google_run(run_id, course_code, course_name, report_type, audience, llm_report)
+    return run_id
 
 
 def list_runs(limit: int = 25) -> pd.DataFrame:

@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 
 import pandas as pd
 
+import database
 from database import list_uploaded_datasets, save_uploaded_dataset
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "streamlit_app.py"
@@ -104,6 +105,14 @@ class GeminiAiReportTests(unittest.TestCase):
         self.assertTrue((saved["dataset_key"] == "courses").any())
         self.assertTrue((saved["file_name"] == "courses.csv").any())
 
+    def test_google_sheets_sync_helpers_are_optional_and_safe(self):
+        os.environ.pop("GOOGLE_SHEET_ID", None)
+        os.environ.pop("GOOGLE_SERVICE_ACCOUNT_JSON", None)
+        os.environ.pop("GOOGLE_SERVICE_ACCOUNT_FILE", None)
+
+        self.assertIsNone(database.get_google_sheet_client())
+        self.assertEqual(database.get_google_sheet_rows("Users"), [])
+
     def test_role_based_auth_allows_only_allowed_roles(self):
         os.environ["AUTH_FACULTY_USERNAME"] = "faculty"
         os.environ["AUTH_FACULTY_PASSWORD"] = "faculty123"
@@ -146,6 +155,22 @@ class GeminiAiReportTests(unittest.TestCase):
             module.load_dotenv = original_load_dotenv
             module.init_db = original_init_db
             module.init_state = original_init_state
+
+    def test_render_auth_controls_shows_logout_for_authenticated_user(self):
+        original_st = module.st
+        original_logout_current_user = module.logout_current_user
+        module.st = MagicMock()
+        module.st.session_state = {"authenticated_user": "faculty", "authenticated_role": "Faculty"}
+        module.st.sidebar.button.return_value = True
+        module.logout_current_user = MagicMock()
+
+        try:
+            module.render_auth_controls()
+            module.st.sidebar.button.assert_called_once_with("Logout", icon=":material/logout:")
+            module.logout_current_user.assert_called_once()
+        finally:
+            module.st = original_st
+            module.logout_current_user = original_logout_current_user
 
     def test_role_permissions_are_role_specific(self):
         self.assertTrue(module.role_can_access_feature("Faculty", "data_upload"))

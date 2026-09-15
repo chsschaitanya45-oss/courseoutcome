@@ -20,7 +20,16 @@ from attainment import (
     report_context,
     validate_required_columns,
 )
-from database import DB_PATH, delete_run, get_run, init_db, list_runs, save_run, save_uploaded_dataset
+from database import (
+    DB_PATH,
+    delete_run,
+    get_run,
+    init_db,
+    list_runs,
+    save_run,
+    save_uploaded_dataset,
+    sync_google_user_login,
+)
 
 
 REQUIRED_COLUMNS = {
@@ -115,6 +124,7 @@ def require_authentication() -> None:
             if validate_role_credentials(username, password):
                 st.session_state.authenticated_user = username
                 st.session_state.authenticated_role = infer_role_by_username(username)
+                sync_google_user_login(username, st.session_state.authenticated_role)
                 st.success(f"Access granted for {st.session_state.authenticated_role}.")
                 st.rerun()
             else:
@@ -126,6 +136,14 @@ def logout_current_user() -> None:
     st.session_state.authenticated_user = ""
     st.session_state.authenticated_role = ""
     st.rerun()
+
+
+def render_auth_controls() -> None:
+    if not st.session_state.get("authenticated_user"):
+        return
+
+    if st.sidebar.button("Logout", icon=":material/logout:"):
+        logout_current_user()
 
 
 def filter_runs_for_role(runs: pd.DataFrame, role: str) -> pd.DataFrame:
@@ -544,6 +562,7 @@ def main() -> None:
     init_db()
     init_state()
     require_authentication()
+    render_auth_controls()
 
     st.title("Course outcome agent", icon=":material/analytics:")
     st.caption(
